@@ -6,17 +6,17 @@ const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 let stompClient: CompatClient | null = null;
 let socket: any = null;
 
-const setupSocketDisconnectOnUnload = (stomp: any) => {
-  const handleBeforeUnload = () => {
-    stomp.disconnect(() => {
-      console.log("Disconnected before unloading");
-    });
-  };
-  window.addEventListener("beforeunload", handleBeforeUnload);
-  return () => {
-    window.removeEventListener("beforeunload", handleBeforeUnload);
-  };
-};
+// const setupSocketDisconnectOnUnload = (stomp: any) => {
+//   const handleBeforeUnload = () => {
+//     stomp.disconnect(() => {
+//       console.log("Disconnected before unloading");
+//     });
+//   };
+//   window.addEventListener("beforeunload", handleBeforeUnload);
+//   return () => {
+//     window.removeEventListener("beforeunload", handleBeforeUnload);
+//   };
+// };
 export const connectToAdminChat = (
   onMessageReceived: (message: any) => void
 ) => {
@@ -70,13 +70,8 @@ export const connectToUserChat = (
   }
   // setupSocketDisconnectOnUnload(stompClient);
 };
-export const sendMessageToUser = (userId: string, messageContent: string) => {
-  console.log("🚀 ~ sendMessageToUser ~ messageContent:", messageContent)
+export const sendMessageToUser = (userId: string, chatMessage: IMessageRequest) => {
   if (stompClient && userId) {
-    const chatMessage = {
-      access_token: getAccessTokenFormLocalStorage(),
-      message: messageContent,
-    };
     stompClient.send(
       "/app/adminToUser/" + userId,
       { token: getAccessTokenFormLocalStorage() },
@@ -85,14 +80,10 @@ export const sendMessageToUser = (userId: string, messageContent: string) => {
   }
 };
 
-export const sendMessageToAdmin = (userId: string, messageContent: string) => {
-  if (stompClient && userId) {
-    const chatMessage = {
-      access_token: getAccessTokenFormLocalStorage(),
-      message: messageContent,
-    };
+export const sendMessageToAdmin = (userId: string, chatMessage: IMessageRequest) => {
+  if (stompClient ) {
     stompClient.send(
-      "/app/userToAdmin",
+      "/app/userToAdmin/" + userId,
       { token: getAccessTokenFormLocalStorage() },
       JSON.stringify(chatMessage)
     );

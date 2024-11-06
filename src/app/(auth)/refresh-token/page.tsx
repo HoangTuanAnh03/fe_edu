@@ -9,14 +9,13 @@ export default function RefreshTokenPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPathname = searchParams.get("redirect");
-  console.log("🚀 ~ RefreshTokenPage ~ redirectPathname:", redirectPathname)
   const refreshToken = searchParams.get("refreshToken");
 
   useEffect(() => {
     if (refreshToken && refreshToken === getRefreshTokenFormLocalStorage()) {
       checkAndRefreshToken({
         onSuccess: () => {
-          router.push( "/");
+          router.push(redirectPathname ?? "/");
         },
       });
     }
