@@ -159,7 +159,7 @@ const request = async <Response>(
   // Đảm bảo logic dưới đây chỉ chạy ở phía client (browser)
   if (res.ok && isClient) {
     if (
-      ["api/auth/login", "api/auth/outbound", "api/auth/verify", "api/auth/refresh-token"].some((item) =>
+      ["api/auth/login", "api/auth/outbound", "api/auth/refresh-token"].some((item) =>
         normalizePath(url).startsWith(item)
       )
     ) {

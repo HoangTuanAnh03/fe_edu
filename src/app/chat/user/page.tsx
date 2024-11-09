@@ -5,12 +5,10 @@ import ChatBox from "@/app/chat/components/ChatBox";
 import {
   decodeJWT,
   getAccessTokenFormLocalStorage,
-  getRefreshTokenFormLocalStorage,
 } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import chatApiRequest from "@/apiRequests/chat";
 import InputContainer from "@/app/chat/components/Input";
+import { IUserInChat, IMessageRequest, IMessage } from "@/types/chat";
 
 interface ChatBoxRef {
   removeReply: () => void;
@@ -22,6 +20,7 @@ interface InputContainerRef {
 
 export default function UserChatPage() {
   const [messages, setMessages] = useState<IMessage[]>([]);
+  const [userInChat, setUserInChat] = useState<IUserInChat[]>([]);
   const [userId, setUserId] = useState("");
   const [replyId, setReplyId] = useState<number>(0);
   const chatBoxRef = useRef<ChatBoxRef>(null);
@@ -57,8 +56,9 @@ export default function UserChatPage() {
       setMessages((prevMessages) => [...prevMessages, message]);
     }, userId);
     const fetchRequest = async () => {
-      const usersRes = await chatApiRequest.sMessage(userId);
-      setMessages(usersRes.payload.data!);
+      const res = await chatApiRequest.sMessage(userId);
+      setMessages(res.payload.data?.messages!);
+      setUserInChat(res.payload.data?.users!);
     };
     fetchRequest();
   }, []);
@@ -71,6 +71,7 @@ export default function UserChatPage() {
       <div className="h-full flex flex-col">
         <div className="h-[calc(100vh-63px-56px-56px)]">
           <ChatBox
+            userInChat={userInChat}
             ref={chatBoxRef}
             messages={messages}
             setReplyId={handlerSetReplyId}

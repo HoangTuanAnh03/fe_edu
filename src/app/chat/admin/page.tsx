@@ -4,12 +4,11 @@ import { connectToAdminChat, sendMessageToUser } from "@/utils/SocketService";
 import UserList from "@/app/chat/components/UserList";
 import ChatBox from "@/app/chat/components/ChatBox";
 import chatApiRequest from "@/apiRequests/chat";
-import {
-  useGetMessageMutation,
-} from "@/queries/useChat";
+import { useGetMessageMutation } from "@/queries/useChat";
 import InputContainer from "@/app/chat/components/Input";
 import { getAccessTokenFormLocalStorage } from "@/lib/utils";
 import HeaderChat from "@/app/chat/components/Header";
+import { IMessage, IMessageRequest, IUserChat, IUserInChat } from "@/types/chat";
 
 interface ChatBoxRef {
   removeReply: () => void;
@@ -22,6 +21,7 @@ interface InputContainerRef {
 export default function AdminChatPage() {
   const [users, setUsers] = useState<IUserChat[]>([]);
   const [messages, setMessages] = useState<IMessage[]>([]);
+  const [userInChat, setUserInChat] = useState<IUserInChat[]>([]);
   const [currentUser, setCurrentUser] = useState<IUserChat>();
   const getMessageMutation = useGetMessageMutation();
   const [replyId, setReplyId] = useState<number>(0);
@@ -29,11 +29,12 @@ export default function AdminChatPage() {
   const inputContainerRef = useRef<InputContainerRef>(null);
 
   const fetchMessages = (userId: string) => {
-    // setCurrentUser(userId);
+    users.length > 0 && setCurrentUser(users.find((user) => user.user_id === userId));
     const fetchRequest = async () => {
       if (getMessageMutation.isPending) return;
-      const usersRes = await chatApiRequest.sMessage(userId);
-      setMessages(usersRes.payload.data!);
+      const res = await chatApiRequest.sMessage(userId);
+      setMessages(res.payload.data?.messages!);
+      setUserInChat(res.payload.data?.users!);
     };
     fetchRequest();
   };
@@ -115,6 +116,7 @@ export default function AdminChatPage() {
           <ChatBox
             ref={chatBoxRef}
             messages={messages}
+            userInChat={userInChat}
             role={"ADMIN"}
             setReplyId={handlerSetReplyId}
           />

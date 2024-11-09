@@ -1,3 +1,4 @@
+import { IUserChat, ConversationResponse } from "@/types/chat";
 import http from "@/utils/api";
 
 const chatApiRequest = {
@@ -5,7 +6,7 @@ const chatApiRequest = {
     http.get<IBackendRes<IUserChat[]>>("infoChat/users/getAllUserIdsAndLatestMessage"),
 
   sMessage: (userId: string) =>
-    http.get<IBackendRes<IMessage[]>>(`infoChat/messages/${userId}`),
+    http.get<IBackendRes<ConversationResponse>>(`infoChat/messages/${userId}`),
 
   sGetUserByMessageId: (messageId: number) =>
     http.get<IBackendRes<IUserChat>>(`infoChat/users/${messageId}`),

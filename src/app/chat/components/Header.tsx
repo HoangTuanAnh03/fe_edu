@@ -3,7 +3,7 @@ import React from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export default function HeaderChat({user} :{user: IUserChat | null}) {
+export default function HeaderChat({ user }: { user: IUserChat | null }) {
   return (
     <div className="h-full flex items-center">
       <div className="m-[6px] flex w-fit hover:bg-[#e6e7e8] rounded-[8px]">
@@ -11,9 +11,8 @@ export default function HeaderChat({user} :{user: IUserChat | null}) {
           <Avatar className="overflow-hidden rounded-full">
             <AvatarImage
               src={
-                user
-                  ? process.env.NEXT_PUBLIC_STORAGE_API_ENDPOINT +
-                  user.image
+                user?.image
+                  ? process.env.NEXT_PUBLIC_STORAGE_API_ENDPOINT + user.image
                   : "/default_avatar.png"
               }
               alt="avatar"
@@ -23,9 +22,7 @@ export default function HeaderChat({user} :{user: IUserChat | null}) {
           </Avatar>
         </div>
         <div className="h-full w-fit p-[6px] flex flex-col justify-center">
-          <div className=" font-bold mb-1 text-[14px]">
-            {user?.user_name}
-          </div>
+          <div className=" font-bold mb-1 text-[14px]">{user?.user_name}</div>
           <div className=" font-normal text-[#65676b] text-[12px]">
             Hoạt động 42 phút trước
           </div>

@@ -1,6 +1,7 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { convertToDate } from "@/lib/utils";
+import { IUserChat } from "@/types/chat";
 
 interface UserListProps {
   users: IUserChat[];

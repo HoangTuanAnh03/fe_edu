@@ -17,44 +17,4 @@ declare global {
     };
     result: T[];
   }
-
-  interface IUserChat {
-    user_id: string;
-    user_name: string;
-    image: string;
-    admin_id: string;
-    admin_name: string;
-    message: string;
-    sender_type: string;
-    timestamp: string;
-    status: string;
-  }
-
-  interface IMessage {
-    id: number;
-    user_id: string;
-    user_name: string;
-    admin_id: string;
-    admin_name: string;
-    message: string;
-    sender_type: string;
-    timestamp: string;
-    status: string;
-    type: string;
-    reply: IReply | null;
-  }
-
-  interface IMessageRequest {
-    access_token: string;
-    message: string;
-    type: string;
-    id: number | null;
-  }
-
-  interface IReply {
-    id: number;
-    sender_id: string;
-    sender_name: string;
-    message: string;
-  }
 }

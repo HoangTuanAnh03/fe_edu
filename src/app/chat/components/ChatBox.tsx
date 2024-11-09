@@ -4,6 +4,21 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import Image from "next/image";
 import { decodeJWT, getAccessTokenFormLocalStorage } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 interface ChatBoxRef {
   removeReply: () => void;
@@ -11,12 +26,13 @@ interface ChatBoxRef {
 
 interface ChatBoxProps {
   messages: IMessage[];
+  userInChat: IUserInChat[];
   role: string;
   setReplyId: (replyId: number) => void;
 }
 
 const ChatBox = React.forwardRef<ChatBoxRef, ChatBoxProps>(
-  ({ messages, role, setReplyId }, ref) => {
+  ({ messages, userInChat, role, setReplyId }, ref) => {
     const [messageReply, setMessageReply] = useState<IMessage | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
 
@@ -37,6 +53,10 @@ const ChatBox = React.forwardRef<ChatBoxRef, ChatBoxProps>(
       setReplyId(0);
     };
 
+    const findUser = (id: string): IUserInChat | undefined => {
+      return userInChat.find((user) => user.user_id === id);
+    };
+
     useEffect(() => {
       setUserId(decodeJWT(getAccessTokenFormLocalStorage()!).uid);
     }, []);
@@ -44,11 +64,11 @@ const ChatBox = React.forwardRef<ChatBoxRef, ChatBoxProps>(
     return (
       <div
         id="chat-box"
-        className="flex flex-col h-full border border-b border-gray-300 rounded-lg"
+        className="flex justify-between flex-col h-full border border-b border-gray-300 rounded-lg"
       >
         <ScrollArea className=" p-4">
           <div>
-            {messages.map((msg, index) => (
+            {messages.length > 0 && messages.map((msg, index) => (
               <div className="group" key={index}>
                 {msg.reply && (
                   <div
@@ -70,23 +90,25 @@ const ChatBox = React.forwardRef<ChatBoxRef, ChatBoxProps>(
                       (msg.sender_type === "ADMIN" && msg.admin_id === userId)
                         ? msg.reply.sender_id === userId
                           ? "Bạn đã trả lời chính mình"
-                          : `Bạn đã trả lời ${msg.reply.sender_name}`
+                          : `Bạn đã trả lời ${
+                              findUser(msg.reply?.sender_id)?.user_name
+                            }`
                         : msg.reply.sender_id === userId
                         ? `${
                             msg.sender_type === "USER" && msg.user_id !== userId
-                              ? msg.user_name
-                              : msg.admin_name
+                              ? findUser(msg.user_id)?.user_name
+                              : findUser(msg.admin_id)?.user_name
                           }  đã trả lời Bạn`
                         : `${
                             msg.sender_type === "USER"
-                              ? msg.user_name
-                              : msg.admin_name
+                              ? findUser(msg.user_id)?.user_name
+                              : findUser(msg.admin_id)?.user_name
                           }  đã trả lời ${
                             [msg.admin_id, msg.user_id].includes(
                               msg.reply.sender_id
                             )
                               ? "chính mình"
-                              : msg.reply.sender_name
+                              : findUser(msg.reply?.sender_id)?.user_name
                           }`}
                     </div>
                     <div
@@ -118,10 +140,29 @@ const ChatBox = React.forwardRef<ChatBoxRef, ChatBoxProps>(
                   >
                     {msg.message}
                   </div>
-                  <div className="items-center hidden group-hover:flex">
-                    <div className="p-1.5 rounded-full hover:bg-[#ebebeb]">
-                      <Image src={"/share.svg"} height={16} width={16} alt="" />
+                  <div className=" items-center hidden group-hover:flex">
+                    <div className="relative">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <div className="p-1.5 rounded-full relative hover:bg-[#ebebeb]">
+                            <Image
+                              src={"/more.svg"}
+                              height={16}
+                              width={16}
+                              alt=""
+                            />
+                          </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56 absolute top-0">
+                          <DropdownMenuItem>GitHub</DropdownMenuItem>
+                          <DropdownMenuItem>Support</DropdownMenuItem>
+                          <DropdownMenuItem disabled>API</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
+                    {/* <div className="p-1.5 rounded-full hover:bg-[#ebebeb]">
+                      <Image src={"/more.svg"} height={16} width={16} alt="" />
+                    </div> */}
                     <div
                       className="p-1.5 rounded-full hover:bg-[#ebebeb]"
                       onClick={() => handleReply(msg)}
@@ -129,7 +170,12 @@ const ChatBox = React.forwardRef<ChatBoxRef, ChatBoxProps>(
                       <Image src={"/share.svg"} height={16} width={16} alt="" />
                     </div>
                     <div className="p-1.5 rounded-full hover:bg-[#ebebeb]">
-                      <Image src={"/share.svg"} height={16} width={16} alt="" />
+                      <Image
+                        src={"/emotion.svg"}
+                        height={16}
+                        width={16}
+                        alt=""
+                      />
                     </div>
                   </div>
                 </div>
@@ -138,18 +184,24 @@ const ChatBox = React.forwardRef<ChatBoxRef, ChatBoxProps>(
           </div>
         </ScrollArea>
         {messageReply && (
-          <div>
+          <div >
             <Separator />
-            <div className="px-4 pt-2 pb-1 flex justify-between items-center">
+            <div className=" px-4 pt-2 pb-1 flex justify-between items-center">
               <div>
                 <div className="text-sm text-[#050505] text-bold">
                   {messageReply.sender_type === "USER"
                     ? messageReply.user_id === userId
                       ? "Đang trả lời chính mình"
-                      : "Đang trả lời " + messageReply.user_name
+                      : "Đang trả lời " +
+                        userInChat.find(
+                          (user) => user.user_id === messageReply.user_id
+                        )?.user_name
                     : messageReply.admin_id === userId
                     ? "Đang trả lời chính mình"
-                    : "Đang trả lời " + messageReply.user_name}
+                    : "Đang trả lời " +
+                      userInChat.find(
+                        (user) => user.user_id === messageReply.reply?.sender_id
+                      )?.user_name}
                 </div>
                 <div className="text-xs text-[#65676B]">
                   {messageReply.message}

@@ -1,22 +1,12 @@
 import SockJS from "sockjs-client";
 import { CompatClient, Stomp } from "@stomp/stompjs";
 import { getAccessTokenFormLocalStorage } from "@/lib/utils";
+import { IMessageRequest } from "@/types/chat";
 
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 let stompClient: CompatClient | null = null;
 let socket: any = null;
 
-// const setupSocketDisconnectOnUnload = (stomp: any) => {
-//   const handleBeforeUnload = () => {
-//     stomp.disconnect(() => {
-//       console.log("Disconnected before unloading");
-//     });
-//   };
-//   window.addEventListener("beforeunload", handleBeforeUnload);
-//   return () => {
-//     window.removeEventListener("beforeunload", handleBeforeUnload);
-//   };
-// };
 export const connectToAdminChat = (
   onMessageReceived: (message: any) => void
 ) => {
@@ -71,6 +61,7 @@ export const connectToUserChat = (
   // setupSocketDisconnectOnUnload(stompClient);
 };
 export const sendMessageToUser = (userId: string, chatMessage: IMessageRequest) => {
+  console.log("🚀 ~ sendMessageToUser ~ chatMessage:", chatMessage)
   if (stompClient && userId) {
     stompClient.send(
       "/app/adminToUser/" + userId,

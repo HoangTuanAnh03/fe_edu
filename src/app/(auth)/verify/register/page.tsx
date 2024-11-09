@@ -28,13 +28,9 @@ export default function VerifyEmail() {
 
     async function verify(authCode: string) {
       const res = await authApiRequest.verifyRegister(authCode);
-      console.log("🚀 ~ outbound ~ res:", res);
 
       if (res.payload.code === 200) {
-        toast({
-          title: "Xác thực thành công.",
-        });
-        router.push("/");
+        return
       } else if (res.payload.code === 1005) {
         setType(types.Timeout);
       } else if (res.payload.code === 400) {
@@ -53,7 +49,25 @@ export default function VerifyEmail() {
 
   return (
     <>
-      {type !== types.Success && (
+      {type === types.Success ? (
+        <div className="w-full flex justify-center h-screen items-center">
+        <div className=" max-w-7xl p-6 w-full flex items-center flex-col">
+          <Image
+            src="/robby-subscription.svg"
+            alt="Robby Subscription"
+            width={160}
+            height={160}
+          />
+          <h2 className="text-3xl font-bold mt-4 mb-6">
+              Xác nhận email thành công
+          </h2>
+
+          <p className="text-[16px]">
+              Email xác nhận thành công. Vui lòng đăng nhập để tiếp tục sử dụng.
+          </p>
+        </div>
+      </div>
+      ) :  (
         <div className="w-full flex justify-center h-screen items-center">
           <div className=" max-w-7xl p-6 w-full flex items-center flex-col">
             <Image
