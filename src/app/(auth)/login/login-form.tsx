@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { Description } from "@radix-ui/react-toast";
 import Link from "next/link";
-import { useLoginMutation } from "@/queries/useAuth";
+import { useLoginMutation, useLogoutMutation } from "@/queries/useAuth";
 import { useAppStore } from "@/components/app-provider";
 import { decodeJWT, getAccessTokenFormLocalStorage } from "@/lib/utils";
 
@@ -24,13 +24,18 @@ const LoginForm = () => {
   const { toast } = useToast();
   const router = useRouter();
   const loginMutation = useLoginMutation();
+  const logoutMutation = useLogoutMutation();
+
   const setRole = useAppStore((state) => state.setRole);
+  const setImage = useAppStore((state) => state.setImage);
+  const setName = useAppStore((state) => state.setName);
+  const setNoPassword = useAppStore((state) => state.setNoPassword);
 
   const form = useForm<LoginBodyType>({
     resolver: zodResolver(LoginBody),
     mode: "all",
     defaultValues: {
-      email: "user@gmail.com",
+      email: "admin@gmail.com",
       password: "12345678",
     },
   });
@@ -47,7 +52,21 @@ const LoginForm = () => {
       const accessToken = getAccessTokenFormLocalStorage();
       if (accessToken) {
         const role = decodeJWT(accessToken).scope;
-        setRole(role);
+        if (role !== "ROLE_ADMIN") {
+          toast({
+            variant: "destructive",
+            title: "Chỉ ADMIN mới được vào trang này",
+          });
+          await logoutMutation.mutateAsync();
+        } else {
+          toast({ description: "Đăng nhập thành công" });
+          const decode = decodeJWT(res.payload.data?.access_token!);
+
+          setRole(decode.scope);
+          setImage(decode.image);
+          setName(decode.name);
+          setNoPassword(decode.no_password);
+        }
       }
       router.push("/");
     } else {
@@ -99,7 +118,7 @@ const LoginForm = () => {
                   Mật khẩu <abbr className="text-red-600">*</abbr>
                 </FormLabel>
                 <Description className="text-[#192fb5] font-normal">
-                  <Link href={"#"}>Quên mật khẩu?</Link>
+                  <Link href={"/users/password/new"}>Quên mật khẩu?</Link>
                 </Description>
               </div>
               <FormControl>

@@ -1,12 +1,12 @@
 // types/chat.ts
 
-export interface IBackendRes<T> {
+export type IBackendRes<T> = {
   message: string;
   code: number | string;
   data?: T;
-}
+};
 
-export interface IModelPaginate<T> {
+export type IModelPaginate<T> = {
   meta: {
     current: number;
     pageSize: number;
@@ -14,9 +14,9 @@ export interface IModelPaginate<T> {
     total: number;
   };
   result: T[];
-}
+};
 
-export interface IUserChat {
+export type IUserChat = {
   user_id: string;
   user_name: string;
   image: string;
@@ -26,9 +26,9 @@ export interface IUserChat {
   sender_type: string;
   timestamp: string;
   status: string;
-}
+};
 
-export interface IMessage {
+export type IMessage = {
   id: number;
   user_id: string;
   admin_id: string;
@@ -38,28 +38,28 @@ export interface IMessage {
   status: string;
   type: string;
   reply: IReply | null;
-}
+};
 
-export interface IMessageRequest {
+export type IMessageRequest = {
   access_token: string;
   message: string;
   type: string;
   id: number | null;
-}
+};
 
-export interface IReply {
+export type IReply = {
   id: number;
   sender_id: string;
   message: string;
-}
+};
 
-export interface IUserInChat {
+export type IUserInChat = {
   user_id: string;
   user_name: string;
   image: string;
-}
+};
 
-export interface ConversationResponse {
+export type ConversationResponse = {
   users: IUserInChat[];
   messages: IMessage[];
-}
+};

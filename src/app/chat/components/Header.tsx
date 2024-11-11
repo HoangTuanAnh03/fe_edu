@@ -2,6 +2,7 @@
 import React from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { IUserChat } from "@/types/chat";
 
 export default function HeaderChat({ user }: { user: IUserChat | null }) {
   return (

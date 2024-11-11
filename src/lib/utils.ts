@@ -5,6 +5,7 @@ import { type ClassValue, clsx } from "clsx";
 import jwt from "jsonwebtoken";
 import { UseFormSetError } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
+import { useAppStore } from "@/components/app-provider";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -46,6 +47,9 @@ type PayloadJWT = {
   uid: string;
   sub: string;
   scope: string;
+  name: string;
+  no_password: boolean;
+  image: string;
   iss: string;
   exp: number;
   iat: number;

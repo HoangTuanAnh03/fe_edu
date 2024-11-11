@@ -40,7 +40,7 @@ const NewPasswordForm = () => {
       router.push(`/verify?email=${values.email}`);
     } else if (payload.code === 404) {
       setError("Oops! Email không tồn tại, vui lòng thử lại.");
-    } else if (payload.code === 1404) {
+    } else if (payload.code === 400) {
       setError(
         "Email này đã dùng để đăng ký qua tài khoản Google.\nVui lòng đăng nhập bằng Google"
       );
@@ -88,7 +88,7 @@ const NewPasswordForm = () => {
 
           <Link href={"/login"}>
             <Button
-              className="w-full h-11 border-[#ed1b2f] text-[#ed1b2f] font-semibold text-[16px] hover:bg-[#fff5f5] hover:text-[#ed1b2f] select-none "
+              className="w-full h-11 mt-4 border-[#ed1b2f] text-[#ed1b2f] font-semibold text-[16px] hover:bg-[#fff5f5] hover:text-[#ed1b2f] select-none "
               variant="outline"
             >
               Đăng nhập

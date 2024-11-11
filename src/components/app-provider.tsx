@@ -22,6 +22,12 @@ type AppStoreType = {
   isAuth: boolean;
   role: string | undefined;
   setRole: (role?: string | undefined) => void;
+  image: string;
+  setImage: (image: string) => void;
+  name: string;
+  setName: (name: string) => void;
+  noPassword: boolean;
+  setNoPassword: (noPassword: boolean) => void;
 };
 
 export const useAppStore = create<AppStoreType>((set) => ({
@@ -33,6 +39,18 @@ export const useAppStore = create<AppStoreType>((set) => ({
       removeTokenFormLocalStorage();
     }
   },
+  image: "",
+  setImage: (image: string) => {
+    set({ image: image });
+  },
+  name: "",
+  setName: (name: string) => {
+    set({ name: name });
+  },
+  noPassword: false,
+  setNoPassword: (noPassword: boolean) => {
+    set({ noPassword: noPassword });
+  },
 }));
 
 export default function AppProvider({
@@ -42,13 +60,20 @@ export default function AppProvider({
 }) {
   const count = useRef(0);
   const setRole = useAppStore((state) => state.setRole);
+  const setImage = useAppStore((state) => state.setImage);
+  const setName = useAppStore((state) => state.setName);
+  const setNoPassword = useAppStore((state) => state.setNoPassword);
 
   useEffect(() => {
     if (count.current === 0) {
       const accessToken = getAccessTokenFormLocalStorage();
       if (accessToken) {
-        const role = decodeJWT(accessToken).scope;
-        setRole(role);
+        const decode = decodeJWT(accessToken!);
+
+        setRole(decode.scope);
+        setImage(decode.image);
+        setName(decode.name);
+        setNoPassword(decode.no_password);
       }
       count.current++;
     }

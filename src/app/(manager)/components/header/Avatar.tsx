@@ -1,4 +1,6 @@
-import { ButtonLogout } from "@/components/header/ButtonLogout";
+"use client";
+import { ButtonLogout } from "@/app/(manager)/components/header/ButtonLogout";
+import { useAppStore } from "@/components/app-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -8,20 +10,27 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 export function AvatarOption() {
+  const image = useAppStore((state) => state.image);
+
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Avatar className="select-none">
+          <Avatar className="select-none h-12 w-12">
             <AvatarImage
-              src="https://lh3.googleusercontent.com/a/ACg8ocKBsFoMIeesNbbl-3lYdnbkOF6Kc7-oX7LE-LyduNwjxnv3_Cqk=s96-c"
+            className="h-full object-cover"
               alt="@shadcn"
+              src={
+                image !== ""
+                  ? process.env.NEXT_PUBLIC_STORAGE_API_ENDPOINT + image
+                  : "/default_avatar.png"
+              }
             />
-            <AvatarFallback>CN</AvatarFallback>
+            <AvatarFallback>AD</AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56">

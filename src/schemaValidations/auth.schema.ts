@@ -73,6 +73,7 @@ export const LoginRes = z.object({
     email: z.string(),
     name: z.string(),
     role: z.string(),
+    image: z.string(),
   }),
   access_token: z.string(),
   refresh_token: z.string(),

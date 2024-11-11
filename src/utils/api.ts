@@ -44,20 +44,6 @@ export class EntityError extends HttpError {
   }
 }
 
-class AccessToken {
-  private token = "";
-  get value() {
-    return this.token;
-  }
-  set value(token: string) {
-    // Nếu gọi method này ở server thì sẽ bị lỗi
-    if (typeof window === "undefined") {
-      throw new Error("Cannot set token on server side");
-    }
-    this.token = token;
-  }
-}
-
 let clientLogoutRequest: null | Promise<any> = null;
 
 export const isClient = typeof window !== "undefined";

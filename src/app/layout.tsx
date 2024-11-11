@@ -29,7 +29,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AppProvider>
-            <Header />
+            {/* <Header /> */}
             <Toaster />
             {children}
             <RefreshToken/>
