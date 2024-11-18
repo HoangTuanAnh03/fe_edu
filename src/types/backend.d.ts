@@ -10,11 +10,21 @@ declare global {
 
   type IModelPaginate<T> = {
     meta: {
-      current: number;
+      page: number;
       pageSize: number;
       pages: number;
       total: number;
     };
     result: T[];
+  }
+
+  type IModelPaginateRequest = {
+    page: number;
+    size: number;
+    sort: string[];
+  }
+
+  type IModelSpecificationRequest = {
+    filter: string;
   }
 }

@@ -2,7 +2,7 @@
 import { IoChatboxEllipsesOutline } from "react-icons/io5";
 import { IconContext } from "react-icons/lib";
 
-export function ChatIcon() {
+export function Chat() {
   return (
     <div className="">
       <IconContext.Provider value={{ size: "28px", color: "gray" }}>

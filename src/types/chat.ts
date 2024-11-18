@@ -1,21 +1,5 @@
 // types/chat.ts
 
-export type IBackendRes<T> = {
-  message: string;
-  code: number | string;
-  data?: T;
-};
-
-export type IModelPaginate<T> = {
-  meta: {
-    current: number;
-    pageSize: number;
-    pages: number;
-    total: number;
-  };
-  result: T[];
-};
-
 export type IUserChat = {
   user_id: string;
   user_name: string;

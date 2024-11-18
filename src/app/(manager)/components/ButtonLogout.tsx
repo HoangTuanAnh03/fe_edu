@@ -24,7 +24,6 @@ export function ButtonLogout() {
   return (
     <div onClick={handleLogout}>
       Log out
-      <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
     </div>
   );
 }

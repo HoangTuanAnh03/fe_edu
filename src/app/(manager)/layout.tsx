@@ -1,19 +1,28 @@
-import Header from "@/app/(manager)/components/header/Header";
-import SideBar from "@/app/(manager)/components/sidebar/SideBar";
-import React from "react";
+import {
+  SidebarProvider,
+  SidebarInset,
+} from "@/components/ui/sidebar";
+import { AppSidebar } from "@/app/(manager)/components/app-sidebar";
+import { cookies } from "next/headers";
+import { AppHeader } from "@/app/(manager)/components/app-header";
 
-export default function ManagerLayout({
+export default async function Layout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get("sidebar:state")?.value === "true";
+
   return (
-    <div className="flex h-screen w-full">
-      <SideBar />
-      <div className="flex flex-col flex-1">
-        <Header />
-        <div>{children}</div>
-      </div>
-    </div>
+    <SidebarProvider defaultOpen={defaultOpen} className="flex">
+      <AppSidebar />
+        <SidebarInset 
+        // sau không dùng insert thì bỏ đi classnames
+        className="w-full rounded-md ">
+            <AppHeader />
+            <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
+        </SidebarInset>
+    </SidebarProvider>
   );
 }
