@@ -29,21 +29,30 @@ import { useCreateLevelMutation } from "@/queries/useLevel";
 import { useUploadLevelMutation } from "@/queries/useMedia";
 import { LevelResponse } from "@/types/level";
 
-const DetailForm = ({
-  id,
-  open
-  // setOpen,
-}: {
-  id: number,
-  open: boolean;
-  // setOpen: (value: boolean) => void;
-}) => {
+// ({
+//   id,
+//   setId,
+// }: {
+//   id: number | undefined,
+//   setId: (value: number | undefined) => void
+// })
+
+const DetailForm =  
+({
+    open,
+    setOpen,
+    id
+  }: {
+    open: boolean;
+    setOpen: (value: boolean) => void;
+    id: number | undefined
+  })  => {
   const { toast } = useToast();
   const createTopicMutation = useCreateLevelMutation();
   const uploadLevelImageMutation = useUploadLevelMutation();
   const [file, setFile] = useState<File | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
-  const [openDetail, setOpenDetail] = useState<boolean>(open);
+  // const [openDetail, setOpenDetail] = useState<boolean>(open);
 
 
   const form = useForm<CreateBodyType>({
@@ -100,7 +109,7 @@ const DetailForm = ({
   };
 
   return (
-    <Dialog open={openDetail} onOpenChange={setOpenDetail}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="font-normal">
           <Plus />

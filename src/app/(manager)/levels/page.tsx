@@ -51,7 +51,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LevelResponse } from "@/types/level";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import CreateForm from "@/app/(manager)/levels/create-form";
 import { useGetAllLevelQuery } from "@/queries/useLevel";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -140,9 +140,15 @@ export const columns: ColumnDef<LevelResponse>[] = [
   },
   {
     id: "actions",
-    enableHiding: true,
+    enableHiding: false,
     cell: ({ row }) => {
       const currentRow = row.original;
+      const { setLevelIdEdit, setOpenEdit } = useContext(LevelTableContext);
+
+      const openDetail = () => {
+        setLevelIdEdit(currentRow.id);
+        setOpenEdit(true);
+      };
 
       return (
         <DropdownMenu>
@@ -161,10 +167,7 @@ export const columns: ColumnDef<LevelResponse>[] = [
             </DropdownMenuItem> */}
 
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              {/* </Link> */}
-            </DropdownMenuItem>
-            <DropdownMenuItem>Edit</DropdownMenuItem>
+            <DropdownMenuItem onClick={openDetail}>Edit</DropdownMenuItem>
             <DropdownMenuItem>Delete</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -173,11 +176,20 @@ export const columns: ColumnDef<LevelResponse>[] = [
   },
 ];
 
+const LevelTableContext = React.createContext<{
+  levelIdEdit: number | undefined;
+  setLevelIdEdit: (value: number) => void;
+  setOpenEdit: (value: boolean) => void;
+}>({
+  levelIdEdit: undefined,
+  setLevelIdEdit: (value: number | undefined) => {},
+  setOpenEdit: (value: boolean) => {},
+});
+
 export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const page = searchParams.get("page") ? Number(searchParams.get("page")) : 1;
-  const id = searchParams.get("id") ? Number(searchParams.get("id")) : 0;
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -189,9 +201,9 @@ export default function DashboardPage() {
 
   const [open, setOpen] = useState<boolean>(false);
   const [openDetail, setOpenDetail] = useState<boolean>(false);
-  const [pageSize, setPageSize] = useState<number>(20);
-  const [levelIdEdit, setLevelIdEdit] = useState<number>(0);
-  const [levelDelete, setLevelDelete] = useState<LevelResponse | null>(null);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [levelIdEdit1, setLevelIdEdit1] = useState<number | undefined>();
+  // const [levelDelete, setLevelDelete] = useState<LevelResponse | null>(null);
 
   const spec: IModelSpecificationRequest = {
     filter: "",
@@ -210,6 +222,7 @@ export default function DashboardPage() {
   useEffect(() => {
     // reset pageIndex when pageSize changes and blank
     if (page < 0 || page > pageTotal) router.push("/levels");
+
   }, [pageTotal]);
 
   const table = useReactTable({
@@ -232,174 +245,205 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="w-full">
-      <div className="flex items-center py-4">
-        <div className="flex gap-3 flex-1 ">
-          <Input
-            placeholder="Filter name ..."
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("name")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
-          <CreateForm open={open} setOpen={setOpen} />
-          <DetailForm id={id} open={id !== 0} />
-        </div>
+    <LevelTableContext.Provider
+      value={{
+        levelIdEdit: levelIdEdit1,
+        setLevelIdEdit: setLevelIdEdit1,
+        setOpenEdit: setOpenDetail
+      }}
+    >
+      <div className="w-full">
+        <div className="flex items-center py-4">
+          <div className="flex gap-3 flex-1 ">
+            <Input
+              placeholder="Filter name ..."
+              value={
+                (table.getColumn("name")?.getFilterValue() as string) ?? ""
+              }
+              onChange={(event) =>
+                table.getColumn("name")?.setFilterValue(event.target.value)
+              }
+              className="max-w-sm"
+            />
+            {/* <CreateForm
+              open={levelIdEdit1 === 3}
+              setOpen={() => {
+                setLevelIdEdit1(2);
+              }}
+            /> */}
+            {/* <CreateForm open={open} setOpen={() => setOpen(!open)} /> */}
+            <DetailForm
+              // key={levelIdEdit}
+              // id={levelIdEdit1}
+              // setId={setLevelIdEdit1}
+              open={openDetail} setOpen={() => {
+                console.log("openDetail", openDetail);
+                setOpenDetail(!openDetail)}} id={levelIdEdit1}
+            />
+          </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              <SlidersHorizontal />
-              Views
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <SlidersHorizontal />
+                Views
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
                   return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
                   );
                 })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {isLoading &&
-              Array(10)
-                .fill(0)
-                .map((_, index) => (
-                  <TableRow key={index}>
-                    {table.getAllColumns().map((_, index) => (
-                      <TableCell key={index} className="text-center">
-                        <Skeleton className="h-[30px] rounded-md mt-1" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {isLoading &&
+                Array(10)
+                  .fill(0)
+                  .map((_, index) => (
+                    <TableRow key={index}>
+                      {table.getAllColumns().map((_, index) => (
+                        <TableCell key={index} className="text-center">
+                          <Skeleton className="h-[30px] rounded-md mt-1" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
 
-            {table.getRowModel().rows?.length
-              ? table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              : !isLoading && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
+              {table.getRowModel().rows?.length
+                ? table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
                     >
-                      No results.
-                    </TableCell>
-                  </TableRow>
-                )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                : !isLoading && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center"
+                      >
+                        No results.
+                      </TableCell>
+                    </TableRow>
+                  )}
+            </TableBody>
+          </Table>
         </div>
-        <div className="space-x-2 flex items-center text-sm gap-8">
-          <div className="flex items-center gap-2">
-            <span className="text-slate-800">Rows per page</span>
-            <Select
-              value={pageSize.toString()}
-              onValueChange={(value) => setPageSize(Number(value))}
-            >
-              <SelectTrigger className="w-fit gap-2">
-                {isLoading ? (
-                  <Skeleton className=" h-6 w-8 rounded-md" />
-                ) : (
-                  <SelectValue placeholder={pageSize} />
-                )}
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="5">5</SelectItem>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="15">15</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="25">25</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+        <div className="flex items-center justify-end space-x-2 py-4">
+          <div className="flex-1 text-sm text-muted-foreground">
+            {table.getFilteredSelectedRowModel().rows.length} of{" "}
+            {table.getFilteredRowModel().rows.length} row(s) selected.
           </div>
-          {isLoading ? (
-            <Skeleton className="h-[30px] w-[100px] rounded-md" />
-          ) : (
-            <div>
-              Page {page} of {pageTotal}
+          <div className="space-x-2 flex items-center text-sm gap-8">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-800">Rows per page</span>
+              <Select
+                value={pageSize.toString()}
+                onValueChange={(value) => setPageSize(Number(value))}
+              >
+                <SelectTrigger className="w-fit gap-2">
+                  {isLoading ? (
+                    <Skeleton className=" h-6 w-8 rounded-md" />
+                  ) : (
+                    <SelectValue placeholder={pageSize} />
+                  )}
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="15">15</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
-          )}
+            {isLoading ? (
+              <Skeleton className="h-[30px] w-[100px] rounded-md" />
+            ) : (
+              <div>
+                Page {page} of {pageTotal}
+              </div>
+            )}
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" disabled={page < 2}>
-              <Link href={`levels`} className="py-2 px-3">
-                <ChevronsLeft />
-              </Link>
-            </Button>
-            <Button variant="outline" size="icon" disabled={page < 2}>
-              <Link href={`levels?page=${page - 1}`} className="py-2 px-3">
-                <ChevronLeft />
-              </Link>
-            </Button>
-            <Button variant="outline" size="icon" disabled={page >= pageTotal}>
-              <Link href={`levels?page=${page + 1}`} className="py-2 px-3">
-                <ChevronRight />
-              </Link>
-            </Button>
-            <Button variant="outline" size="icon" disabled={page >= pageTotal}>
-              <Link href={`levels?page=${pageTotal}`} className="py-2 px-3">
-                <ChevronsRight />
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" disabled={page < 2}>
+                <Link href={`levels`} className="py-2 px-3">
+                  <ChevronsLeft />
+                </Link>
+              </Button>
+              <Button variant="outline" size="icon" disabled={page < 2}>
+                <Link href={`levels?page=${page - 1}`} className="py-2 px-3">
+                  <ChevronLeft />
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={page >= pageTotal}
+              >
+                <Link href={`levels?page=${page + 1}`} className="py-2 px-3">
+                  <ChevronRight />
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={page >= pageTotal}
+              >
+                <Link href={`levels?page=${pageTotal}`} className="py-2 px-3">
+                  <ChevronsRight />
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </LevelTableContext.Provider>
   );
 }
