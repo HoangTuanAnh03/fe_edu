@@ -7,3 +7,9 @@ export const useUploadLevelMutation = () => {
         mutationFn: uploadApiRequest.sLevelImage
     })
 }
+
+export const useUploadWordMutation = () => {
+    return useMutation({
+        mutationFn: uploadApiRequest.sWordImage
+    })
+}

@@ -3,9 +3,8 @@ import z from "zod";
 export const CreateBody = z
   .object({
     name: z.string({ required_error: "Required information" }).trim().max(256),
-    image: z
-      .string()
-      .trim()
+    levelId: z
+      .number({ required_error: "Required information" })
   })
   .strict();
 

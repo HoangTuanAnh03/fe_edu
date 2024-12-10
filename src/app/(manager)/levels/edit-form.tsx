@@ -14,46 +14,35 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { CreateBody, CreateBodyType } from "@/schemaValidations/level.schema";
-import { useState, useRef, useMemo } from "react";
-import { Plus, Upload, X } from "lucide-react";
+import { useState, useRef, useMemo, useEffect } from "react";
+import { Upload, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useCreateLevelMutation } from "@/queries/useLevel";
+import {
+  useEditLevelMutation,
+  useGetByIdQuery,
+} from "@/queries/useLevel";
 import { useUploadLevelMutation } from "@/queries/useMedia";
-import { LevelResponse } from "@/types/level";
 
-// ({
-//   id,
-//   setId,
-// }: {
-//   id: number | undefined,
-//   setId: (value: number | undefined) => void
-// })
-
-const DetailForm =  
-({
-    open,
-    setOpen,
-    id
-  }: {
-    open: boolean;
-    setOpen: (value: boolean) => void;
-    id: number | undefined
-  })  => {
+const EditForm = ({
+  id,
+  setId,
+}: {
+  id: number | undefined;
+  setId: (value: number | undefined) => void;
+}) => {
   const { toast } = useToast();
-  const createTopicMutation = useCreateLevelMutation();
+  const editLevelMutation = useEditLevelMutation();
   const uploadLevelImageMutation = useUploadLevelMutation();
   const [file, setFile] = useState<File | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
-  // const [openDetail, setOpenDetail] = useState<boolean>(open);
 
+  const { data } = useGetByIdQuery(id as number, Boolean(id));
 
   const form = useForm<CreateBodyType>({
     resolver: zodResolver(CreateBody),
@@ -74,25 +63,37 @@ const DetailForm =
     return image;
   }, [image, file]);
 
+  useEffect(() => {
+    if (data) {
+      const { name, image } = data.payload.data!;
+      form.reset({ name, image: image ?? "" });
+    }
+  }, [data]);
+
   // 2. Define a submit handler.
   async function onSubmit(values: CreateBodyType) {
-    if (createTopicMutation.isPending) return;
+    if (editLevelMutation.isPending) return;
+    if (!form.formState.isDirty) {
+      reset()
+      return;
+    }
 
     try {
       let body = values;
       if (file) {
         const formData = new FormData();
         formData.append("image", file);
-
         const res = await uploadLevelImageMutation.mutateAsync(formData);
         const imgUrl = res.payload.data?.fileName[0] ?? "";
         body = { ...values, image: imgUrl };
       }
-      const result = await createTopicMutation.mutateAsync(body);
-
+      const result = await editLevelMutation.mutateAsync({
+        ...body,
+        id: id as number,
+      });
       if (result.payload.code === 200) {
         reset();
-        toast({ description: "Tạo mới Topic thành công" });
+        toast({ description: "Update level successfully"});
       } else if (result.payload.code === 409) {
         form.setError("name", {
           type: "custom",
@@ -105,22 +106,26 @@ const DetailForm =
   const reset = () => {
     form.reset();
     setFile(null);
-    // setOpen(false);
+    setId(undefined);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="font-normal">
-          <Plus />
-          Detail Level
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+    <Dialog
+      open={Boolean(id)}
+      onOpenChange={(value) => {
+        if (!value) {
+          reset();
+        }
+      }}
+    >
+      <DialogContent
+        className="sm:max-w-lg"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
-          <DialogTitle>New topic</DialogTitle>
+          <DialogTitle>Edit</DialogTitle>
           <DialogDescription>
-            Make more topics here. Click save when you're done.
+            Edit more topics here. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -157,17 +162,30 @@ const DetailForm =
                 <FormItem>
                   <FormLabel>Image</FormLabel>
                   <div className="flex gap-2 items-start justify-start">
-                    {previewImage && (
+                    {(previewImage || image) && (
                       <div>
-                        <Avatar className="aspect-square w-[100px] h-[100px] rounded-md object-cover relative group">
-                          <AvatarImage src={previewImage} />
+                        <Avatar className="aspect-square w-[130px] h-[130px] rounded-md object-cover relative group">
+                          {image && (
+                            <AvatarImage
+                              src={
+                                image.startsWith("http")
+                                  ? image
+                                  : process.env
+                                      .NEXT_PUBLIC_STORAGE_API_ENDPOINT + image
+                              }
+                            />
+                          )}
+                          {previewImage && <AvatarImage src={previewImage} />}
                           <AvatarFallback className="rounded-none">
                             {name}
                           </AvatarFallback>
-                          <div className="w-[100px] h-[100px] absolute bg-[#f5c9ce] bg-opacity-50  items-center justify-center hidden group-hover:flex">
+                          <div className="w-[130px] h-[130px] absolute bg-[#f5c9ce] bg-opacity-50  items-center justify-center hidden group-hover:flex">
                             <button
                               className="bg-[#ED1B2F] hover:bg-[#c83333] rounded-full"
-                              onClick={() => setFile(null)}
+                              onClick={() => {
+                                setFile(null);
+                                field.onChange("");
+                              }}
                             >
                               <X color="white" />
                             </button>
@@ -175,21 +193,22 @@ const DetailForm =
                         </Avatar>
                       </div>
                     )}
-                    <input
+                    <Input
+                      className="hidden"
                       type="file"
                       accept="image/*"
-                      className="hidden"
                       ref={imageInputRef}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
                           setFile(file);
+                          field.onChange(file.name)
                         }
                       }}
                     />
                     <button
                       type="button"
-                      className="flex aspect-square w-[100px] h-[100px] items-center justify-center rounded-md border border-muted bg-transparent hover:bg-accent hover:text-accent-foreground"
+                      className="flex aspect-square w-[130px] h-[130px] items-center justify-center rounded-md border border-muted bg-transparent hover:bg-accent hover:text-accent-foreground"
                       onClick={() => imageInputRef.current?.click()}
                     >
                       <Upload className="h-4 w-4 text-muted-foreground" />
@@ -204,9 +223,9 @@ const DetailForm =
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
               <Button
                 type="submit"
-                className=" bg-[#ED1B2F] hover:bg-[#c83333]"
+                className={form.formState.isDirty ? "bg-[#ED1B2F] hover:bg-[#c83333]" : "bg-[#cfcfcf] hover:bg-[#c83333] text-black"}
               >
-                Save
+                {form.formState.isDirty ? "Save" : "Ok"}
               </Button>
             </div>
           </form>
@@ -216,4 +235,4 @@ const DetailForm =
   );
 };
 
-export default DetailForm;
+export default EditForm;

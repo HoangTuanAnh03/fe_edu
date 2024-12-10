@@ -1,15 +1,15 @@
-import Header from '@/components/header/header'
-import React from 'react'
+import Header from "@/components/header/Header";
+import React from "react";
 
 export default function AuthLayout({
-  children
+  children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <div>
-      <Header/>
+      <Header />
       {children}
     </div>
-  )
+  );
 }

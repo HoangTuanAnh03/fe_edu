@@ -12,3 +12,9 @@ export type LevelCreateRequest = {
   name: string;
   image: string;
 };
+
+export type LevelEditRequest = {
+  id: number;
+  name: string;
+  image: string;
+};

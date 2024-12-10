@@ -8,7 +8,13 @@ import { useGetMessageMutation } from "@/queries/useChat";
 import InputContainer from "@/app/chat/components/Input";
 import { getAccessTokenFormLocalStorage } from "@/lib/utils";
 import HeaderChat from "@/app/chat/components/Header";
-import { IMessage, IMessageRequest, IUserChat, IUserInChat } from "@/types/chat";
+import {
+  IMessage,
+  IMessageRequest,
+  IUserChat,
+  IUserInChat,
+} from "@/types/chat";
+import Header from "@/components/header/Header";
 
 interface ChatBoxRef {
   removeReply: () => void;
@@ -29,7 +35,8 @@ export default function AdminChatPage() {
   const inputContainerRef = useRef<InputContainerRef>(null);
 
   const fetchMessages = (userId: string) => {
-    users.length > 0 && setCurrentUser(users.find((user) => user.user_id === userId));
+    users.length > 0 &&
+      setCurrentUser(users.find((user) => user.user_id === userId));
     const fetchRequest = async () => {
       if (getMessageMutation.isPending) return;
       const res = await chatApiRequest.sMessage(userId);
@@ -104,30 +111,33 @@ export default function AdminChatPage() {
   }, []);
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-gray-100">
-      <div className="flex-1 max-w-[360px]">
-        <UserList users={users} onSelectUser={fetchMessages} />
+    <>
+      <Header />
+      <div className="flex h-[calc(100vh-64px)] bg-gray-100">
+        <div className="flex-1 max-w-[360px]">
+          <UserList users={users} onSelectUser={fetchMessages} />
+        </div>
+        <div className="flex-1 flex-col mr-2 ">
+          <div className=" h-[64px] w-full">
+            <HeaderChat user={currentUser ?? null} />
+          </div>
+          <div className="h-[calc(100vh-64px-64px-56px)]">
+            <ChatBox
+              ref={chatBoxRef}
+              messages={messages}
+              userInChat={userInChat}
+              role={"ADMIN"}
+              setReplyId={handlerSetReplyId}
+            />
+          </div>
+          <div className=" h-[56px] flex items-center">
+            <InputContainer
+              ref={inputContainerRef}
+              handleSendMessage={handleSendMessage}
+            />
+          </div>
+        </div>
       </div>
-      <div className="flex-1 flex-col mr-2 ">
-        <div className=" h-[64px] w-full">
-          <HeaderChat user={currentUser ?? null} />
-        </div>
-        <div className="h-[calc(100vh-64px-64px-56px)]">
-          <ChatBox
-            ref={chatBoxRef}
-            messages={messages}
-            userInChat={userInChat}
-            role={"ADMIN"}
-            setReplyId={handlerSetReplyId}
-          />
-        </div>
-        <div className=" h-[56px] flex items-center">
-          <InputContainer
-            ref={inputContainerRef}
-            handleSendMessage={handleSendMessage}
-          />
-        </div>
-      </div>
-    </div>
+    </>
   );
 }

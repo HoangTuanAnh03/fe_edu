@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { Chat } from "@/app/(manager)/components/Chat";
+import Link from "next/link";
 
 export function AppHeader() {
   return (
@@ -32,9 +33,9 @@ export function AppHeader() {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <div>
+      <Link href={"/chat"}>
         <Chat />
-      </div>
+      </Link>
     </header>
   );
 }

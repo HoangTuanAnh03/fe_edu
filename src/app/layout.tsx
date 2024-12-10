@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
-import Header from "@/components/header/header";
+import Header from "@/components/headera/header";
 import { Toaster } from "@/components/ui/toaster";
 import AppProvider from "@/components/app-provider";
 import RefreshToken from "@/components/refresh-token";
@@ -32,7 +32,7 @@ export default function RootLayout({
             {/* <Header /> */}
             <Toaster />
             {children}
-            <RefreshToken/>
+            <RefreshToken />
           </AppProvider>
         </ThemeProvider>
       </body>

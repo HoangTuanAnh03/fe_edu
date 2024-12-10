@@ -3,6 +3,8 @@ import authApiRequest from "@/apiRequests/auth";
 import { useAppStore } from "@/components/app-provider";
 import { toast } from "@/hooks/use-toast";
 import { decodeJWT, getAccessTokenFormLocalStorage } from "@/lib/utils";
+import { useLogoutMutation } from "@/queries/useAuth";
+import { LoginResType } from "@/schemaValidations/auth.schema";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -10,8 +12,15 @@ import { useEffect } from "react";
 
 export default function Authentication() {
   const router = useRouter();
-  const setRole = useAppStore((state) => state.setRole);
   const isCalledRef = React.useRef(false);
+  const logoutMutation = useLogoutMutation();
+
+
+  const setRole = useAppStore((state) => state.setRole);
+  const setImage = useAppStore((state) => state.setImage);
+  const setName = useAppStore((state) => state.setName);
+  const setNoPassword = useAppStore((state) => state.setNoPassword);
+
 
   useEffect(() => {
     const authCodeRegex = /code=([^&]+)/;
@@ -23,18 +32,33 @@ export default function Authentication() {
     }
 
     const outbound = async (code: string) => {
-      const res = await authApiRequest.outbound(code);
-  
-      if (res.status === 200) {
+      const res = (await authApiRequest.outbound(code)).payload as IBackendRes<LoginResType>;
+
+      if (res.code === 200) {
         toast({
           title: "Đăng nhập thành công bằng Google.",
         });
         const accessToken = getAccessTokenFormLocalStorage();
         if (accessToken) {
           const role = decodeJWT(accessToken).scope;
-          setRole(role);
+          if (role !== "ROLE_ADMIN") {
+            toast({
+              variant: "destructive",
+              title: "Chỉ ADMIN mới được vào trang này",
+            });
+            await logoutMutation.mutateAsync();
+          } else {
+            toast({ description: "Đăng nhập thành công" });
+            const decode = decodeJWT(res.data?.access_token!);
+  
+            setRole(decode.scope);
+            setImage(decode.image);
+            setName(decode.name);
+            setNoPassword(decode.no_password);
+
+            router.push("/");
+          }
         }
-        router.push("/");
       } else {
         toast({
           variant: "destructive",

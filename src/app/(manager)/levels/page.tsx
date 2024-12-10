@@ -12,15 +12,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  MoreHorizontal,
-  SlidersHorizontal,
-} from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, SlidersHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,14 +25,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  SelectGroup,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -55,9 +39,11 @@ import { useContext, useEffect, useState } from "react";
 import CreateForm from "@/app/(manager)/levels/create-form";
 import { useGetAllLevelQuery } from "@/queries/useLevel";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
-import DetailForm from "@/app/(manager)/levels/detail-form";
+import { AlertDelete } from "@/app/(manager)/levels/alert-delete";
+import { FooterPagination } from "@/app/(manager)/components/footer-pagination";
+import { useDebounce } from "@/hooks/use-debound";
+import EditForm from "@/app/(manager)/levels/edit-form";
 
 export const columns: ColumnDef<LevelResponse>[] = [
   {
@@ -95,6 +81,7 @@ export const columns: ColumnDef<LevelResponse>[] = [
         </Button>
       );
     },
+    sortingFn: "text",
     cell: ({ row }) => <div className="capitalize">{row.getValue("name")}</div>,
   },
   {
@@ -142,16 +129,21 @@ export const columns: ColumnDef<LevelResponse>[] = [
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const currentRow = row.original;
-      const { setLevelIdEdit, setOpenEdit } = useContext(LevelTableContext);
+      const { setLevelIdEdit, setLevelDelete } = useContext(LevelTableContext);
+      const [openDropdown, setOpenDropdown] = useState<boolean>(false);
 
       const openDetail = () => {
-        setLevelIdEdit(currentRow.id);
-        setOpenEdit(true);
+        setLevelIdEdit(row.original.id);
+        setOpenDropdown(false);
+      };
+
+      const openAlertDelete = () => {
+        setLevelDelete(row.original);
+        setOpenDropdown(false);
       };
 
       return (
-        <DropdownMenu>
+        <DropdownMenu open={openDropdown} onOpenChange={setOpenDropdown}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Open menu</span>
@@ -160,15 +152,11 @@ export const columns: ColumnDef<LevelResponse>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            {/* <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(currentRow.id)}
-            >
-              Copy payment ID
-            </DropdownMenuItem> */}
-
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={openDetail}>Edit</DropdownMenuItem>
-            <DropdownMenuItem>Delete</DropdownMenuItem>
+            <DropdownMenuItem onClick={openAlertDelete}>
+              Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -179,18 +167,16 @@ export const columns: ColumnDef<LevelResponse>[] = [
 const LevelTableContext = React.createContext<{
   levelIdEdit: number | undefined;
   setLevelIdEdit: (value: number) => void;
-  setOpenEdit: (value: boolean) => void;
+  levelDelete: LevelResponse | undefined;
+  setLevelDelete: (value: LevelResponse | undefined) => void;
 }>({
   levelIdEdit: undefined,
   setLevelIdEdit: (value: number | undefined) => {},
-  setOpenEdit: (value: boolean) => {},
+  levelDelete: undefined,
+  setLevelDelete: (value: LevelResponse | undefined) => {},
 });
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const page = searchParams.get("page") ? Number(searchParams.get("page")) : 1;
-
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -199,14 +185,18 @@ export default function DashboardPage() {
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const [open, setOpen] = useState<boolean>(false);
-  const [openDetail, setOpenDetail] = useState<boolean>(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const page = searchParams.get("page") ? Number(searchParams.get("page")) : 1;
+  const [openCreate, setOpenCreate] = useState<boolean>(false);
   const [pageSize, setPageSize] = useState<number>(10);
-  const [levelIdEdit1, setLevelIdEdit1] = useState<number | undefined>();
-  // const [levelDelete, setLevelDelete] = useState<LevelResponse | null>(null);
+  const [levelIdEdit, setLevelIdEdit] = useState<number | undefined>();
+  const [levelDelete, setLevelDelete] = useState<LevelResponse | undefined>();
+  const [searchValue, setSearchValue] = useState<string>("");
+  const debounce = useDebounce(searchValue);
 
   const spec: IModelSpecificationRequest = {
-    filter: "",
+    filter: "lname ~ '" + debounce + "'",
   };
 
   const pageAble: IModelPaginateRequest = {
@@ -219,10 +209,16 @@ export default function DashboardPage() {
   const levels: LevelResponse[] = data?.payload.data?.result ?? [];
   const pageTotal = data?.payload.data?.meta.pages ?? 1;
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const searchValue = e.target.value;
+    if (!searchValue.startsWith(" ")) {
+      setSearchValue(searchValue);
+    }
+  };
+
   useEffect(() => {
     // reset pageIndex when pageSize changes and blank
     if (page < 0 || page > pageTotal) router.push("/levels");
-
   }, [pageTotal]);
 
   const table = useReactTable({
@@ -247,9 +243,10 @@ export default function DashboardPage() {
   return (
     <LevelTableContext.Provider
       value={{
-        levelIdEdit: levelIdEdit1,
-        setLevelIdEdit: setLevelIdEdit1,
-        setOpenEdit: setOpenDetail
+        levelIdEdit,
+        setLevelIdEdit,
+        levelDelete,
+        setLevelDelete,
       }}
     >
       <div className="w-full">
@@ -257,58 +254,44 @@ export default function DashboardPage() {
           <div className="flex gap-3 flex-1 ">
             <Input
               placeholder="Filter name ..."
-              value={
-                (table.getColumn("name")?.getFilterValue() as string) ?? ""
-              }
-              onChange={(event) =>
-                table.getColumn("name")?.setFilterValue(event.target.value)
-              }
+              value={searchValue}
+              onChange={handleChange}
               className="max-w-sm"
-            />
-            {/* <CreateForm
-              open={levelIdEdit1 === 3}
-              setOpen={() => {
-                setLevelIdEdit1(2);
-              }}
-            /> */}
-            {/* <CreateForm open={open} setOpen={() => setOpen(!open)} /> */}
-            <DetailForm
-              // key={levelIdEdit}
-              // id={levelIdEdit1}
-              // setId={setLevelIdEdit1}
-              open={openDetail} setOpen={() => {
-                console.log("openDetail", openDetail);
-                setOpenDetail(!openDetail)}} id={levelIdEdit1}
             />
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <SlidersHorizontal />
-                Views
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex gap-3">
+            <CreateForm open={openCreate} setOpen={setOpenCreate} />
+            <EditForm id={levelIdEdit} setId={setLevelIdEdit} />
+            <AlertDelete level={levelDelete} setLevel={setLevelDelete} />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <SlidersHorizontal />
+                  Views
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) =>
+                          column.toggleVisibility(!!value)
+                        }
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
         <div className="rounded-md border">
           <Table>
@@ -378,70 +361,14 @@ export default function DashboardPage() {
             {table.getFilteredSelectedRowModel().rows.length} of{" "}
             {table.getFilteredRowModel().rows.length} row(s) selected.
           </div>
-          <div className="space-x-2 flex items-center text-sm gap-8">
-            <div className="flex items-center gap-2">
-              <span className="text-slate-800">Rows per page</span>
-              <Select
-                value={pageSize.toString()}
-                onValueChange={(value) => setPageSize(Number(value))}
-              >
-                <SelectTrigger className="w-fit gap-2">
-                  {isLoading ? (
-                    <Skeleton className=" h-6 w-8 rounded-md" />
-                  ) : (
-                    <SelectValue placeholder={pageSize} />
-                  )}
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="5">5</SelectItem>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="15">15</SelectItem>
-                    <SelectItem value="20">20</SelectItem>
-                    <SelectItem value="25">25</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-            {isLoading ? (
-              <Skeleton className="h-[30px] w-[100px] rounded-md" />
-            ) : (
-              <div>
-                Page {page} of {pageTotal}
-              </div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" disabled={page < 2}>
-                <Link href={`levels`} className="py-2 px-3">
-                  <ChevronsLeft />
-                </Link>
-              </Button>
-              <Button variant="outline" size="icon" disabled={page < 2}>
-                <Link href={`levels?page=${page - 1}`} className="py-2 px-3">
-                  <ChevronLeft />
-                </Link>
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                disabled={page >= pageTotal}
-              >
-                <Link href={`levels?page=${page + 1}`} className="py-2 px-3">
-                  <ChevronRight />
-                </Link>
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                disabled={page >= pageTotal}
-              >
-                <Link href={`levels?page=${pageTotal}`} className="py-2 px-3">
-                  <ChevronsRight />
-                </Link>
-              </Button>
-            </div>
-          </div>
+          <FooterPagination
+            path={"levels"}
+            page={page}
+            pageSize={pageSize}
+            pageTotal={pageTotal}
+            isLoading={isLoading}
+            setPageSize={setPageSize}
+          />
         </div>
       </div>
     </LevelTableContext.Provider>

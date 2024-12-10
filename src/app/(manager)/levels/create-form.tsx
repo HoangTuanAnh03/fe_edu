@@ -14,7 +14,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -27,7 +26,6 @@ import { Plus, Upload, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useCreateLevelMutation } from "@/queries/useLevel";
 import { useUploadLevelMutation } from "@/queries/useMedia";
-import { LevelResponse } from "@/types/level";
 
 const CreateForm = ({
   open,
@@ -45,10 +43,6 @@ const CreateForm = ({
   const form = useForm<CreateBodyType>({
     resolver: zodResolver(CreateBody),
     mode: "all",
-    defaultValues: {
-      name: "",
-      image: "",
-    },
   });
 
   const image = form.watch("image");
@@ -96,7 +90,14 @@ const CreateForm = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={() => {
+        setOpen(!open);
+        form.reset();
+        setFile(null);
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" className="font-normal">
           <Plus />
@@ -107,7 +108,7 @@ const CreateForm = ({
         <DialogHeader>
           <DialogTitle>New topic</DialogTitle>
           <DialogDescription>
-            Make more topics here. Click save when you're done.
+            Make more level here. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -144,14 +145,14 @@ const CreateForm = ({
                 <FormItem>
                   <FormLabel>Image</FormLabel>
                   <div className="flex gap-2 items-start justify-start">
-                    {previewImage && (
+                    {previewImage && file && (
                       <div>
-                        <Avatar className="aspect-square w-[100px] h-[100px] rounded-md object-cover relative group">
+                        <Avatar className="aspect-square w-[130px] h-[130px] rounded-md object-cover relative group">
                           <AvatarImage src={previewImage} />
                           <AvatarFallback className="rounded-none">
                             {name}
                           </AvatarFallback>
-                          <div className="w-[100px] h-[100px] absolute bg-[#f5c9ce] bg-opacity-50  items-center justify-center hidden group-hover:flex">
+                          <div className="w-[130px] h-[130px] absolute bg-[#f5c9ce] bg-opacity-50  items-center justify-center hidden group-hover:flex">
                             <button
                               className="bg-[#ED1B2F] hover:bg-[#c83333] rounded-full"
                               onClick={() => setFile(null)}
@@ -162,21 +163,22 @@ const CreateForm = ({
                         </Avatar>
                       </div>
                     )}
-                    <input
+                    <Input
+                      className="hidden"
                       type="file"
                       accept="image/*"
-                      className="hidden"
                       ref={imageInputRef}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
                           setFile(file);
+                          field.onChange(file.name);
                         }
                       }}
                     />
                     <button
                       type="button"
-                      className="flex aspect-square w-[100px] h-[100px] items-center justify-center rounded-md border border-muted bg-transparent hover:bg-accent hover:text-accent-foreground"
+                      className="flex aspect-square w-[130px] h-[130px] items-center justify-center rounded-md border border-muted bg-transparent hover:bg-accent hover:text-accent-foreground"
                       onClick={() => imageInputRef.current?.click()}
                     >
                       <Upload className="h-4 w-4 text-muted-foreground" />
