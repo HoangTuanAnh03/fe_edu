@@ -1,4 +1,4 @@
-import { WeeklyAnswerByLevelResponse, WeeklyAnswerRateResponse } from "@/types/statistics";
+import { PvpRankingReportResponse, TopUser, WeeklyAnswerByLevelResponse, WeeklyAnswerRateResponse } from "@/types/statistics";
 import http from "@/utils/api";
 
 const statisticsApiRequest = {
@@ -7,6 +7,16 @@ const statisticsApiRequest = {
 
   sGetWeeklyAnswerRate: () =>
     http.get<IBackendRes<WeeklyAnswerRateResponse>>(`statistics/weeklyAnswerRate`),
+
+
+  sGetWeeklyPVPLeaderboard: () =>
+    http.get<IBackendRes<TopUser[]>>(`statistics/weeklyPVPLeaderboard`),
+
+  sGetPvpRankingReport: () =>
+    http.get<IBackendRes<PvpRankingReportResponse[]>>(`statistics/pvpRankingReport`),
+
+  sDownloadReport: (fileName: string) =>
+    http.get(`statistics/downloadReport/${fileName}`),
 
 };
 

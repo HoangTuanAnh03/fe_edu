@@ -1,34 +1,27 @@
 import { AnswerByLevelChart } from "@/app/(manager)/dashboard/AnswerByLevelChart";
+import { Report } from "@/app/(manager)/dashboard/Report";
 import { WeeklyAnswerRateChart } from "@/app/(manager)/dashboard/WeeklyAnswerRateChart";
 import { WeeklyPVPLeaderChart } from "@/app/(manager)/dashboard/WeeklyPVPLeaderChart";
 
 export default function DashboardPage() {
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex flex-row h-min">
-        <div className="h-fit">
+    <div className="flex flex-col gap-y-4">
+      <div className="flex gap-x-4">
+        <div className="w-[500px]">
           <AnswerByLevelChart />
         </div>
-        <div className="h-fit">
-          <WeeklyAnswerRateChart />
+        <div className="flex-1 h-full">
+          <WeeklyPVPLeaderChart />
         </div>
       </div>
-      <div className="h-1/2 flex-1">
-        <WeeklyPVPLeaderChart />
+      <div className="flex gap-x-4">
+        <div className="w-[500px]">
+          <WeeklyAnswerRateChart />
+        </div>
+        <div className="flex-1 h-[350px] ">
+          <Report />
+        </div>
       </div>
     </div>
   );
-  // return (
-  //   <div className="grid grid-cols-2 grid-rows-2 gap-4 h-full">
-  //     <div className="h-fit">
-  //       <AnswerByLevelChart />
-  //     </div>
-  //     <div className="h-fit">
-  //       <WeeklyAnswerRateChart />
-  //     </div>
-  //     <div className="h-1/2">
-  //       <WeeklyPVPLeaderChart />
-  //     </div>
-  //   </div>
-  // );
 }
